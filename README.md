@@ -1,84 +1,36 @@
 # Algo
-Docker container orchestration tool for swarm cluster.
 
-## PoC
+Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/algo`. To experiment with that code, run `bin/console` for an interactive prompt.
 
-### Definition
+TODO: Delete this and the text above, and describe your gem
 
-awesomecluster.rb
+## Installation
 
-```rb
+Add this line to your application's Gemfile:
 
-cluster 'awesomecluster' do
-
-  env 'CLUSTER_SHARED_VAR', ';-D'
-  label 'com.example.clusterlabel', 'Awesome Cluster!'
-  label 'com.example.clusterlabel2', 'Awesome Cluster2!'
-
-  network 'frontend' do
-    driver 'overlay'
-    subnet '192.168.0.0/24'
-  end
-
-  network 'backend' do
-    driver 'overlay'
-    subnet '192.168.1.0/24'
-  end
-
-  service 'lb' do
-    image 'nginx'
-    replicas 2
-    update_delay '10s'
-    update_parallelism 1
-    env 'DOMAIN', 'example.com'
-    label 'com.example.servicelabel', ';D'
-    network 'frontend'
-  end
-
-  service 'web' do
-    image 'mywebservice'
-    command '/bin/runserver --sigint-timeout 30'
-    replicas 10
-    update_delay '10s'
-    update_parallelism 2
-    stop_grace_period 35
-    env 'RAILS_ENV', 'PRODUCTION'
-    env 'DOMAIN', 'example.com'
-    label 'com.example.servicelabel', ';-('
-    network 'frontend'
-    network 'backend'
-  end
-
-  service 'worker' do
-    image 'myworker'
-    mode 'global'
-    update_delay '10s'
-    update_parallelism 2
-    env 'RAILS_ENV', 'PRODUCTION'
-    env 'DOMAIN', 'example.com'
-    network 'backend'
-  end
-
-end
-
+```ruby
+gem 'algo'
 ```
 
-### Execution
+And then execute:
 
-```sh
-# Create initial cluster
-algo -h 127.0.0.1:2376 -c awesomecluster.rb --apply
+    $ bundle
 
-# Change configuration
-sed -i s/replicas 10/replicas 12/g awesomecluster.rb
+Or install it yourself as:
 
-# Check diff
-algo -h 127.0.0.1:2376 -c awesomecluster.rb --diff
+    $ gem install algo
 
-# Dry-run
-algo -h 127.0.0.1:2376 -c awesomecluster.rb --apply --dry-run
-#> docker service update awesomecluster_web --replicas 10
+## Usage
 
-# Apply diff/patch
-algo -h 127.0.0.1:2376 -c awesomecluster.rb --apply
-```
+TODO: Write usage instructions here
+
+## Development
+
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+
+To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/algo.
+
