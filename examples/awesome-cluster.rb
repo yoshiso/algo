@@ -10,7 +10,13 @@ cluster 'awesomecluster' do
   label 'com.example.sample', 'clusterwidelabel'
 
   # Define network
-  network 'net1'
+  network 'net1' do
+    ipam do
+      subnet '172.20.0.0/16'
+      ip_range '172.20.10.0/24'
+      gateway '172.20.10.11'
+    end
+  end
 
   # Define service
   service 'name' do

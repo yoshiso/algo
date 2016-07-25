@@ -2,6 +2,26 @@ module Algo
   class Dsl
     module Network
 
+      class IPAMContext
+        attr_reader :context
+
+        def initialize
+          @context = {}
+        end
+
+        def subnet item
+          @context['Subnet'] = item
+        end
+
+        def ip_range item
+          @context['IPRange'] = item
+        end
+
+        def gateway item
+          @context['Gateway'] = item
+        end
+      end
+
       class Context
 
         attr_reader :context
@@ -34,6 +54,13 @@ module Algo
 
         def ipv6
           @context['EnableIPv6'] = true
+        end
+
+        def ipam &block
+          ctx = Network::IPAMContext.new.tap do |ctx|
+            ctx.instance_eval(&block) if block_given?
+          end
+          @context['IPAM']['Config'] << ctx.context
         end
 
         private
