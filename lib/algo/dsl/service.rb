@@ -43,19 +43,79 @@ module Algo
           @context['TaskTemplate']['ContainerSpec']['Env'] << "#{key}=#{val}"
         end
 
+        def workdir name
+          @context['TaskTemplate']['ContainerSpec']['Dir'] = name
+        end
+
+        def user name
+          @context['TaskTemplate']['ContainerSpec']['User'] = name
+        end
+
         # @param [String] period period string like 30s, 1m, 4h
         def stop_grace_period period
-          if period.end_with?('s')
-            period = period.chomp('s').to_i
-          elsif period.end_with?('m')
-            period = period.chomp('m').to_i * 60
-          elsif period.end_with?('h')
-            period = period.chomp('m').to_i * 60 * 60
-          else
-            raise
-          end
-          @context['TaskTemplate']['ContainerSpec']['StopGracePeriod'] = period * 1000000000
+          @context['TaskTemplate']['ContainerSpec']['StopGracePeriod'] = second_from_string(period) * 1e9
         end
+
+        # Resources
+
+        def limit_cpu decimal
+          @context['TaskTemplate']['Resources'] ||= {}
+          @context['TaskTemplate']['Resources']['Limits'] ||= {}
+          @context['TaskTemplate']['Resources']['Limits']['NanoCPUs'] = decimal * 1e9
+        end
+
+        # @param [String] memory num with unit like 1B 20KB 30MB 1GB
+        def limit_memory memory
+          @context['TaskTemplate']['Resources'] ||= {}
+          @context['TaskTemplate']['Resources']['Limits'] ||= {}
+          @context['TaskTemplate']['Resources']['Limits']['MemoryBytes'] = memory_from_string memory
+        end
+
+        def reserve_cpu decimal
+          @context['TaskTemplate']['Resources'] ||= {}
+          @context['TaskTemplate']['Resources']['Reservation'] ||= {}
+          @context['TaskTemplate']['Resources']['Reservation']['NanoCPUs'] = decimal * 1e9
+        end
+
+        # @param [String] memory num with unit like 1B 20KB 30MB 1GB
+        def reserve_memory memory
+          @context['TaskTemplate']['Resources'] ||= {}
+          @context['TaskTemplate']['Resources']['Reservation'] ||= {}
+          @context['TaskTemplate']['Resources']['Reservation']['MemoryBytes'] = memory_from_string memory
+        end
+
+        # RestartPolicy
+
+        # @param [String] name none, on-failure or any
+        def restart_condition name
+          @context['TaskTemplate']['RestartPolicy'] ||= {}
+          @context['TaskTemplate']['RestartPolicy']['Condition'] = name
+        end
+
+        def restart_delay period
+          @context['TaskTemplate']['RestartPolicy'] ||= {}
+          @context['TaskTemplate']['RestartPolicy']['Delay'] = second_from_string(period) * 10e9
+        end
+
+        # @param [Integer] value
+        def restart_max_attempts value
+          @context['TaskTemplate']['RestartPolicy'] ||= {}
+          @context['TaskTemplate']['RestartPolicy']['Attempts'] = value
+        end
+
+        def restart_window value
+          @context['TaskTemplate']['RestartPolicy'] ||= {}
+          @context['TaskTemplate']['RestartPolicy']['Window'] = second_from_string(period) * 10e9
+        end
+
+        # Placement
+
+        def constraint condition
+          @context['TaskTemplate']['Placement'] ||= {}
+          @context['TaskTemplate']['Placement']['Constraints'] ||= []
+          @context['TaskTemplate']['Placement']['Constraints'] << condition
+        end
+
 
         # Label
 
@@ -67,7 +127,31 @@ module Algo
         # Mode
 
         def replicas replica_size
-          @context['Mode']['Replicated']['Replicas']= replica_size
+          @context['Mode'] = { 'Replicated' => { 'Replicas' => replica_size } }
+        end
+
+        def global
+          @context['Mode'] = { 'Global' => {} }
+        end
+
+        # EndpointSpec
+
+        # @param [String] mode vip or dnsrr
+        def endpoint_mode mode
+          @context['EndpointSpec'] = { 'Mode' => mode }
+        end
+
+        # @param [String] port like 80 or 80:80 or 80/udp
+        def publish port
+          port, protocol = *port.split('/')  if '/'.in? port
+          target, publish = *port.split(':')  if ':'.in? port
+          @context['EndpointSpec'] ||= {}
+          @context['EndpointSpec']['Ports'] ||= []
+          @context['EndpointSpec']['Ports'] << {
+            'Protocol' => protocol,
+            'TargetPort' => target,
+            'PublishedPort' => publish
+          }.compact
         end
 
         # UpdateConfig
@@ -87,12 +171,40 @@ module Algo
         def network name
           @context['Networks'] ||= []
           @context['Networks'] << { 'Target' => "#{cluster_prefix}#{name}" }
-         end
+        end
 
         private
 
         def cluster_prefix
           "#{@cluster['prefix']}-" if @cluster['prefix']
+        end
+
+        def second_from_string(period)
+          if period.end_with?('s')
+            period.chomp('s').to_i
+          elsif period.end_with?('m')
+            period.chomp('m').to_i * 60
+          elsif period.end_with?('h')
+            period.chomp('m').to_i * 60 * 60
+          else
+            raise
+          end
+        end
+
+        def memory_from_string(memory)
+          if memory.end_with?('B')
+            memory.chomp('B').to_i
+          elsif memory.end_with?('KB')
+            memory.chomp('KB').to_i * 1e3
+          elsif memory.end_with?('MB')
+            memory.chomp('MB').to_i * 1e6
+          elsif memory.end_with?('GB')
+            memory.chomp('GB').to_i * 1e9
+          elsif memory.end_with?('TB')
+            memory.chomp('TB').to_i * 1e12
+          else
+            raise
+          end
         end
 
       end
