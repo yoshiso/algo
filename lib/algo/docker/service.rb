@@ -14,6 +14,10 @@ module Algo
         @spec = nil
       end
 
+      def name
+        info["Spec"]["Name"]
+      end
+
       def info
         @info = Docker::Service.find(@info["Id"]).info if @info["Spec"].blank?
         @info

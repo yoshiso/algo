@@ -3,6 +3,10 @@ module Algo
     class Network < Base
       DEFAULT_NETWORKS = %w(ingress none host bridge docker_gwbridge)
 
+      def name
+        info['Name']
+      end
+
       def inspect
           "<Algo::Docker::Network name=#{info['Name']} scope=#{info['Scope']}>"
       end
