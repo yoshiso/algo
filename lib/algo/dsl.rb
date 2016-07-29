@@ -21,6 +21,13 @@ module Algo
       dsl.result
     end
 
+    def self.load_text(options, text)
+      dsl = new(options).tap do |dsl|
+        dsl.instance_eval(text)
+      end
+      dsl.result
+    end
+
     def initialize(options)
       @options = CLUSTER_DEFAULT.dup
       @options.merge!(options)
