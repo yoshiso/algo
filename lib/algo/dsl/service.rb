@@ -2,6 +2,58 @@ module Algo
   class Dsl
     module Service
 
+      class VolumeContext
+        attr_reader :context
+
+        def initialize clstr_context, srv_context
+          @clstr_context = clstr_context
+          @srv_context = srv_context
+          @context = {}
+        end
+
+        def readonly
+          @context['ReadOnly'] = true
+        end
+
+        # @param [String] item volume name or host file/directory path
+        def source item
+          raise 'Need to call type at first' unless @context['Type']
+          if @context['Type'] == 'volume'
+            @context['Source'] = "#{cluster_prefix}#{item}"
+          else
+            @context['Source'] = item
+          end
+        end
+
+        # @param [String] item container mount path
+        def target item
+          @context['Target'] = item
+        end
+
+        # @param [String] volume type ex) bind,volume
+        def type item
+          @context['Type'] = item
+        end
+
+        def label key, val
+          @context['VolumeOptions'] ||= {}
+          @context['VolumeOptions']['Labels'] ||= {}
+          @context['VolumeOptions']['Labels'][key] = val
+        end
+
+        # @param [String] volume driver type ex) local
+        def driver item
+          @context['VolumeOptions'] ||= {}
+          @context['VolumeOptions'] = { 'DriverConfig' => { 'Name' => item } }
+        end
+
+        private
+
+        def cluster_prefix
+          "#{@clstr_context['prefix']}-" if @clstr_context['prefix']
+        end
+      end
+
       class Context
         attr_reader :context
 
@@ -54,6 +106,15 @@ module Algo
         # @param [String] period period string like 30s, 1m, 4h
         def stop_grace_period period
           @context['TaskTemplate']['ContainerSpec']['StopGracePeriod'] = second_from_string(period) * 1e9
+        end
+
+        def volume &block
+          raise 'should be called in cluster' unless @context
+          ctx = Service::VolumeContext.new(@cluster, @context).tap do |ctx|
+            ctx.instance_eval(&block)
+          end
+          @context['TaskTemplate']['ContainerSpec']['Mounts'] ||= []
+          @context['TaskTemplate']['ContainerSpec']['Mounts'] << ctx.context
         end
 
         # Resources

@@ -29,6 +29,21 @@ cluster 'awesomecluster' do
 
     env 'APP_DOMAIN', 'example.com'
 
+    # Mount host's directory/file
+    volume do
+      type 'bind'
+      source '/tmp/mount'
+      target '/mnt/sample'
+    end
+
+    # Mount host docker volume
+    volume do
+      type 'volume'
+      source 'volume-name'
+      target '/mnt/volume-sample'
+    end
+
+    # join network
     network 'net1'
   end
 
