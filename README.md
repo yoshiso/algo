@@ -50,20 +50,21 @@ cluster 'awesomecluster' do
     env 'APP_DOMAIN', 'example.com'
 
     network 'net1'
-  end
 
-  # Mount host's directory/file
-  volume do
-    type 'bind'
-    source '/tmp/mount'
-    target '/mnt/sample'
-  end
+    # Mount host's directory/file
+    volume do
+      type 'bind'
+      source '/tmp/mount'
+      target '/mnt/sample'
+    end
 
-  # Mount host docker volume
-  volume do
-    type 'volume'
-    source 'volume-name'
-    target '/mnt/volume-sample'
+    # Mount host docker volume
+    volume do
+      type 'volume'
+      source 'volume-name'
+      target '/mnt/volume-sample'
+    end
+
   end
 
   # Define another service
@@ -81,7 +82,7 @@ end
 ```sh
 # Prepare playground for algo
 docker-machine create --driver virtualbox \
-                      --virtualbox-boot2docker-url="https://github.com/boot2docker/boot2docker/releases/download/v1.12.0-rc4/boot2docker-experimental.iso" \
+                      --virtualbox-boot2docker-url="https://github.com/boot2docker/boot2docker/releases/download/v1.12.1/boot2docker-experimental.iso" \
                       algo
 eval $(docker-machine env algo)
 
@@ -106,7 +107,7 @@ algo apply examples/awesomecluster.rb --dry-run
 # Complete applying for cluster awesomecluster!
 
 # Apply changes
-algo apply examples/awesomecluster.rb --dry-run
+algo apply examples/awesomecluster.rb
 # Applying to cluster awesomecluster...
 # network: awsm-net1, status: ok
 # service: awsm-name, status: ok
@@ -114,7 +115,7 @@ algo apply examples/awesomecluster.rb --dry-run
 # Complete applying for cluster awesomecluster!
 
 # Dry-run terminating cluster
-algo apply examples/awesomecluster.rb --dry-run
+algo rm examples/awesomecluster.rb --dry-run
 # Running with dry-run mode...
 # Terminating cluster awesomecluster...
 # service: awsm-name, status: removed
@@ -123,7 +124,7 @@ algo apply examples/awesomecluster.rb --dry-run
 # Complete Termination for cluster awesomecluster...
 
 # Terminate cluster
-algo apply examples/awesomecluster.rb
+algo rm examples/awesomecluster.rb
 # Terminating cluster awesomecluster...
 # service: awsm-name, status: removed
 # service: awsm-nginx, status: removed
